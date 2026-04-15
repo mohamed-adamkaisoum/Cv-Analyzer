@@ -1,0 +1,1 @@
+## hna n extractiw cv w ndetectiw nom , email , num ,section ansta3mlu bibliotheque spacy 

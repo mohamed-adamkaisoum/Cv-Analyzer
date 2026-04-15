@@ -1,0 +1,1 @@
+#hna aykun endna l resultat dial l'IA par exemple dik lettre de motivation w khassna n3eytu ela client.py w prompts.py 

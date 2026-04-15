@@ -1,0 +1,1 @@
+# vectorisation dial les textes bach lmodel y9der y3ref ra python dev == developpeur python 
