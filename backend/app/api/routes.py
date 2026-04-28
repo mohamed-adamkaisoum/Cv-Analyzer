@@ -3,8 +3,8 @@ import shutil
 
 from fastapi import APIRouter, File, UploadFile
 
-from app.services.pipeline import run_analysis
-
+#from app.services.pipeline import run_analysis
+from backend.app.services.pipeline import run_analysis
 router = APIRouter()
 
 
