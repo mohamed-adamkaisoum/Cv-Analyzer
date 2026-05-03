@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, EmailStr
+﻿from pydantic import BaseModel, EmailStr, Field
 from typing import List, Optional
 
 
@@ -43,24 +43,20 @@ class CVProfile(BaseModel):
 
 class JobMatch(BaseModel):
     titre_poste: str = Field(..., description="Titre du poste")
-
     entreprise: Optional[str] = Field(
         None,
         description="Nom de l'entreprise"
     )
-
     score: float = Field(
         ...,
         ge=0,
         le=1,
         description="Score de similarité entre le CV et l'offre"
     )
-
     competences_manquantes: List[str] = Field(
         default_factory=list,
         description="Compétences requises mais absentes du CV"
     )
-
     top_skills_match: List[str] = Field(
         default_factory=list,
         description="Compétences en commun CV ↔ job"
@@ -69,24 +65,19 @@ class JobMatch(BaseModel):
 
 class AnalysisResult(BaseModel):
     cv_profile: CVProfile
-
     job_matches: List[JobMatch] = Field(
         default_factory=list,
         description="Liste des offres les plus pertinentes"
     )
-
     lettre_motivation: Optional[str] = Field(
         None,
         description="Lettre de motivation générée par le LLM"
     )
-
     feedback: Optional[str] = Field(
         None,
         description="Suggestions pour améliorer le CV"
     )
 
-#Fach l'ustilisateur aybghi lettre de motivation
-#kanakhdou cv_profile li feha ga3 les info dial l'user et job_title lihia smit job li bgha ydf3 lih
 
 class CoverLetterRequest(BaseModel):
     cv_profile: CVProfile
@@ -99,3 +90,35 @@ class AnalyzeResponse(BaseModel):
     message: Optional[str] = None
 
 
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=8)
+    full_name: Optional[str] = None
+
+
+class UserRead(BaseModel):
+    id: int
+    email: EmailStr
+    full_name: Optional[str] = None
+    is_active: bool
+
+    class Config:
+        orm_mode = True
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class CVRead(BaseModel):
+    id_cv: int
+    fichier_cv: str
+    date_upload: datetime
+
+    class Config:
+        orm_mode = True
