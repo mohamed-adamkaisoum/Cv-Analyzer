@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from app.api.routes import router as api_router
-
+from backend.app.api.routes import router
+import os
 
 app = FastAPI(
     title="CV Analyzer AI",
@@ -18,11 +18,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(api_router)
+os.makedirs("uploads", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+app.include_router(router)
 
 @app.get("/")
 def root():
     return {
         "message": "CV Analyzer API is running 🚀"
     }
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
