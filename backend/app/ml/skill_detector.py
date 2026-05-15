@@ -1,6 +1,6 @@
 # hna khass nderu detection dial les competences/skills l output khass ykun liste dial les competences par exemple ['SQL','python']
 import spacy
-from backend.app.nlp.extractor import extract
+from app.nlp.extractor import extract
 import re
 nlp = spacy.load("en_core_web_sm")
 

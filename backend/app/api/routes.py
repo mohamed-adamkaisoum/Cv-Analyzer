@@ -2,9 +2,9 @@ import os
 import shutil
 
 from fastapi import APIRouter, File, UploadFile
-from backend.app.ml.skill_detector import extract_skills_from_file
-from backend.app.ml.ats_scorer import compute_ats_score , extract_text
-from backend.app.services.pipeline import run_analysis
+from app.ml.skill_detector import extract_skills_from_file
+from app.ml.ats_scorer import compute_ats_score, extract_text
+from app.services.pipeline import run_analysis
 
 router = APIRouter()
 

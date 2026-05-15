@@ -1,12 +1,12 @@
 #hna khass n7essbu score ats dial cv , 9elebou ela chnahowa score ats w kifach t9edru tcalculiwh fhad lprojet mohim score ykun ela 100
 import re
-from backend.app.nlp.parser import parse_cv
+from app.nlp.parser import parse_cv
 import language_tool_python
 from collections import Counter
 from spacy.lang.fr.stop_words import STOP_WORDS
 
-from backend.app.nlp.extractor import extract_text_from_pdf
-from backend.app.nlp.extractor import extract_text_from_docx
+from app.nlp.extractor import extract_text_from_pdf
+from app.nlp.extractor import extract_text_from_docx
 #40pts
 def score_parsing(data, feedback):
     score = 0
