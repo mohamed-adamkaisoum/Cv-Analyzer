@@ -1,22 +1,26 @@
-# vectorisation dial les textes bach lmodel y9der y3ref ra python dev == developpeur python 
-
-
-
+# vectorisation dial les textes bach lmodel y9der y3ref ra python dev == developpeur python
 from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 
-model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
-
-def embed_text(text):
-    return model.encode(text)
+_model = None
 
 
+def get_model():
+    global _model
+    if _model is None:
+        print("Loading embedding model...")
+        _model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+        print("Model loaded!")
+    return _model
 
 
-def similarity(text1, text2):
-    v1 = embed_text(text1)
-    v2 = embed_text(text2)
+def encode(text: str) -> np.ndarray:
+    """Convert any text into a vector."""
+    model = get_model()
+    return model.encode(text, convert_to_numpy=True)
 
-    score = cosine_similarity([v1], [v2])[0][0]
 
-    return float(score)
+def encode_batch(texts: list[str]) -> np.ndarray:
+    """Convert a list of texts into vectors (faster than one by one)."""
+    model = get_model()
+    return model.encode(texts, convert_to_numpy=True, show_progress_bar=True)
