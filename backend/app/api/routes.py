@@ -1,11 +1,13 @@
 import os
 import shutil
 
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter, File, Form, UploadFile
 from app.ml.skill_detector import extract_skills_from_file
 from app.ml.ats_scorer import compute_ats_score, extract_text
 from app.ml.matcher import match_cv_to_jobs
 from app.nlp.extractor import extract
+from app.llm.generator import generate_cover_letter, generate_feedback
+from app.services.cv_profile_builder import build_cv_profile_from_file
 from app.services.pipeline import run_analysis
 
 router = APIRouter()
@@ -17,18 +19,16 @@ def health():
 
 UPLOAD_DIR = "uploads"
 @router.post("/analyze")
-async def analyze(file: UploadFile = File(...)):
-
+async def analyze(
+    file: UploadFile = File(...),
+    job_title: str = Form("Poste ciblé"),
+):
     os.makedirs(UPLOAD_DIR, exist_ok=True)
-
     file_path = os.path.join(UPLOAD_DIR, file.filename)
-
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    result = run_analysis(file_path)
-
-    return result
+    return run_analysis(file_path, job_title=job_title)
 
 
 @router.post("/extract-skills")
@@ -83,4 +83,42 @@ async def match_jobs(
         "filename": file.filename,
         "skills": skills,
         "matches": matches,
+    }
+
+
+@router.post("/generate-feedback")
+async def generate_feedback_api(file: UploadFile = File(...)):
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    file_path = os.path.join(UPLOAD_DIR, file.filename)
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    cv_profile = build_cv_profile_from_file(file_path)
+    feedback = generate_feedback(cv_profile)
+
+    return {
+        "filename": file.filename,
+        "cv_profile": cv_profile.model_dump(),
+        "feedback": feedback,
+    }
+
+
+@router.post("/generate-cover-letter")
+async def generate_cover_letter_api(
+    file: UploadFile = File(...),
+    job_title: str = Form(...),
+):
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    file_path = os.path.join(UPLOAD_DIR, file.filename)
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    cv_profile = build_cv_profile_from_file(file_path)
+    letter = generate_cover_letter(cv_profile, job_title)
+
+    return {
+        "filename": file.filename,
+        "job_title": job_title,
+        "cv_profile": cv_profile.model_dump(),
+        "lettre_motivation": letter,
     }
