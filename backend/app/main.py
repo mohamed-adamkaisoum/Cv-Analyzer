@@ -6,6 +6,7 @@ load_dotenv(os.path.join(os.path.dirname(__file__), '../.env'))
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from app.api.routes import router
 
@@ -26,7 +27,19 @@ app.add_middleware(
 os.makedirs("uploads", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
+FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "../frontend")
+if os.path.isdir(FRONTEND_DIR):
+    app.mount("/app", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
+
 app.include_router(router)
+
+@app.get("/", include_in_schema=False)
+def frontend_root():
+    index_path = os.path.join(FRONTEND_DIR, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+
+    return {"message": "CV Analyzer API is running"}
 
 @app.get("/")
 def root():

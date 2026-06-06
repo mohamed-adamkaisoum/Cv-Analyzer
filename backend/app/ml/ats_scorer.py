@@ -36,8 +36,17 @@ def score_parsing(data, feedback):
 
 
 # 30 pts
-tool = language_tool_python.LanguageTool('fr')
-def score_quality(text, feedback):
+tool = None
+
+
+def get_language_tool():
+    global tool
+    if tool is None:
+        tool = language_tool_python.LanguageTool('fr')
+    return tool
+
+
+def score_quality(text, feedback, check_grammar=True):
     score = 0
 
     #  Quantification (10 pts)
@@ -77,8 +86,13 @@ def score_quality(text, feedback):
         feedback.append("Beaucoup de répétitions détectées")
 
     #  Orthographe (10 pts)
+    if not check_grammar:
+        score += 5
+        feedback.append("Verification orthographique disponible en analyse detaillee")
+        return score
+
     try:
-        matches = tool.check(text)
+        matches = get_language_tool().check(text)
 
         if len(matches) < 5:
             score += 10
@@ -135,14 +149,14 @@ def extract_text(file_path):
     else:
         raise ValueError("Format non supporté")
     
-def compute_ats_score(text):
-    data = parse_cv(text)
+def compute_ats_score(text, parsed_data=None, check_grammar=True):
+    data = parsed_data or parse_cv(text)
     feedback = []
 
     scores = {}
 
     scores["parsing"] = score_parsing(data, feedback)
-    scores["quality"] = score_quality(text, feedback)
+    scores["quality"] = score_quality(text, feedback, check_grammar=check_grammar)
     scores["ats_compatibility"] = score_ats_compatibility(text, data, feedback)
 
     total_score = sum(scores.values())

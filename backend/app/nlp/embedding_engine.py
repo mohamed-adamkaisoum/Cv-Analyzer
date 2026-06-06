@@ -23,4 +23,4 @@ def encode(text: str) -> np.ndarray:
 def encode_batch(texts: list[str]) -> np.ndarray:
     """Convert a list of texts into vectors (faster than one by one)."""
     model = get_model()
-    return model.encode(texts, convert_to_numpy=True, show_progress_bar=True)
+    return model.encode(texts, convert_to_numpy=True, show_progress_bar=False)

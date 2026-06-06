@@ -7,7 +7,7 @@ from app.ml.ats_scorer import compute_ats_score, extract_text
 from app.ml.matcher import match_cv_to_jobs
 from app.nlp.extractor import extract
 from app.llm.generator import generate_cover_letter, generate_feedback
-from app.services.cv_profile_builder import build_cv_profile_from_file
+from app.services.cv_profile_builder import analyze_cv_scores_from_file, build_cv_profile_from_file
 from app.services.pipeline import run_analysis
 
 router = APIRouter()
@@ -18,6 +18,16 @@ def health():
     return {"status": "ok"}
 
 UPLOAD_DIR = "uploads"
+
+
+def save_upload(file: UploadFile) -> str:
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    file_path = os.path.join(UPLOAD_DIR, file.filename)
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    return file_path
+
+
 @router.post("/analyze")
 async def analyze(
     file: UploadFile = File(...),
@@ -29,6 +39,17 @@ async def analyze(
         shutil.copyfileobj(file.file, buffer)
 
     return run_analysis(file_path, job_title=job_title)
+
+
+@router.post("/analyze-scores")
+async def analyze_scores(file: UploadFile = File(...)):
+    file_path = save_upload(file)
+    result = analyze_cv_scores_from_file(file_path)
+
+    return {
+        "filename": file.filename,
+        **result,
+    }
 
 
 @router.post("/extract-skills")
@@ -63,6 +84,7 @@ async def match_jobs(
     file: UploadFile = File(...),
     source: str = "api",
     top_n: int = 5,
+    job_title: str = "",
 ):
     os.makedirs(UPLOAD_DIR, exist_ok=True)
     file_path = os.path.join(UPLOAD_DIR, file.filename)
@@ -75,6 +97,7 @@ async def match_jobs(
     matches = match_cv_to_jobs(
         cv_text=cv_text,
         cv_skills=skills,
+        job_title=job_title,
         source=source,
         top_n=top_n,
     )
