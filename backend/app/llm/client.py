@@ -5,12 +5,9 @@ from openai import OpenAI
 
 load_dotenv(os.path.join(os.path.dirname(__file__), "../../.env"))
 
-BASE_URL = os.getenv(
-    "NVIDIA_BASE_URL",
-    "https://integrate.api.nvidia.com/v1",
-)
-API_KEY = os.getenv("NVIDIA_API_KEY") or os.getenv("OPENAI_API_KEY")
-MODEL = os.getenv("NVIDIA_MODEL", "minimaxai/minimax-m2.7")
+BASE_URL = os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1")
+API_KEY = os.getenv("GROQ_API_KEY")
+MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
 _client: OpenAI | None = None
 
@@ -22,7 +19,7 @@ def _get_client() -> OpenAI:
 
     if not API_KEY:
         raise ValueError(
-            "NVIDIA_API_KEY manquante. Ajoutez-la dans backend/.env"
+            "GROQ_API_KEY manquante. Ajoutez-la dans backend/.env"
         )
 
     _client = OpenAI(base_url=BASE_URL, api_key=API_KEY)
@@ -32,23 +29,14 @@ def _get_client() -> OpenAI:
 def generate_text(prompt: str) -> str:
     try:
         client = _get_client()
-        stream = client.chat.completions.create(
+        completion = client.chat.completions.create(
             model=MODEL,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.35,
             top_p=0.9,
-            max_tokens=8192,
-            stream=True,
+            max_tokens=4096,
         )
 
-        parts: list[str] = []
-        for chunk in stream:
-            if not getattr(chunk, "choices", None):
-                continue
-            delta = chunk.choices[0].delta
-            if delta.content:
-                parts.append(delta.content)
-
-        return "".join(parts).strip()
+        return completion.choices[0].message.content.strip()
     except Exception as e:
         return f"Erreur LLM: {str(e)}"

@@ -4,6 +4,7 @@ from app.ml.ats_scorer import compute_ats_score
 from app.ml.skill_detector import extract_skills
 from app.nlp.extractor import extract
 from app.nlp.parser import parse_cv
+from app.llm.generator import generate_analysis_feedback
 from app.schemas import CVProfile
 
 
@@ -55,8 +56,21 @@ def analyze_cv_scores_from_file(file_path: str) -> dict:
     ats = compute_ats_score(text, parsed_data=parsed, check_grammar=False)
     cv_profile = _build_profile(text, parsed, skills, ats)
 
+    # Generate LLM-powered strengths and weaknesses
+    llm_feedback = {"strengths": [], "weaknesses": []}
+    try:
+        llm_feedback = generate_analysis_feedback(
+            cv_profile, ats.get("detailed_metrics", [])
+        )
+    except Exception as e:
+        llm_feedback = {
+            "strengths": ["Document parsed successfully."],
+            "weaknesses": [f"LLM feedback unavailable: {str(e)}"],
+        }
+
     return {
         "cv_profile": cv_profile.model_dump(),
         "ats": ats,
         "skills": cv_profile.competences,
+        "llm_feedback": llm_feedback,
     }

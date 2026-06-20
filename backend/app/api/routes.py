@@ -6,7 +6,7 @@ from app.ml.skill_detector import extract_skills_from_file
 from app.ml.ats_scorer import compute_ats_score, extract_text
 from app.ml.matcher import match_cv_to_jobs
 from app.nlp.extractor import extract
-from app.llm.generator import generate_cover_letter, generate_feedback
+from app.llm.generator import generate_cover_letter, generate_feedback, generate_reworked_cv
 from app.services.cv_profile_builder import analyze_cv_scores_from_file, build_cv_profile_from_file
 from app.services.pipeline import run_analysis
 
@@ -102,10 +102,20 @@ async def match_jobs(
         top_n=top_n,
     )
 
+    all_missing_skills = set()
+    for match in matches:
+        all_missing_skills.update(match.get("missing_skills", []))
+
+    learning_paths = []
+    if all_missing_skills:
+        from app.llm.generator import generate_learning_paths
+        learning_paths = generate_learning_paths(list(all_missing_skills)[:10])
+
     return {
         "filename": file.filename,
         "skills": skills,
         "matches": matches,
+        "learning_paths": learning_paths,
     }
 
 
@@ -144,4 +154,20 @@ async def generate_cover_letter_api(
         "job_title": job_title,
         "cv_profile": cv_profile.model_dump(),
         "lettre_motivation": letter,
+    }
+
+
+@router.post("/rework-cv")
+async def rework_cv_api(file: UploadFile = File(...)):
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    file_path = os.path.join(UPLOAD_DIR, file.filename)
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    cv_profile = build_cv_profile_from_file(file_path)
+    reworked_cv = generate_reworked_cv(cv_profile)
+
+    return {
+        "filename": file.filename,
+        "reworked_cv": reworked_cv,
     }
